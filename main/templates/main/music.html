@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0;background:none">
+
+<audio id="bgMusic" autoplay muted playsinline></audio>
+
+<script>
+const tracks = [
+  "/static/main/audio/wham-last-christmas.mp3",
+  "/static/main/audio/mariah-carey-all-i-want-for-christmas-is-you.mp3",
+  "/static/main/audio/bobby.mp3"
+];
+
+const audio = document.getElementById("bgMusic");
+
+let track = parseInt(localStorage.getItem("musicTrack")) || 0;
+let time  = parseFloat(localStorage.getItem("musicTime")) || 0;
+let playing = localStorage.getItem("musicPlaying");
+if (playing === null) playing = "true";
+
+audio.src = tracks[track];
+audio.volume = 0.4;
+
+audio.addEventListener("loadedmetadata", () => {
+  if (time > 0 && time < audio.duration) {
+    audio.currentTime = time;
+  }
+
+  if (playing === "true") {
+    audio.play().catch(()=>{});
+    unlockSound();
+  }
+});
+
+function unlockSound() {
+  setTimeout(() => {
+    audio.muted = false;
+  }, 200);
+}
+
+window.addEventListener("message", (e) => {
+  if (!e.data || !e.data.type) return;
+
+  if (e.data.type === "PLAY") {
+    audio.muted = false;
+    audio.play().catch(()=>{});
+    localStorage.setItem("musicPlaying", "true");
+  }
+
+  if (e.data.type === "PAUSE") {
+    audio.pause();
+    localStorage.setItem("musicPlaying", "false");
+  }
+});
+
+audio.addEventListener("ended", () => {
+  track = (track + 1) % tracks.length;
+  localStorage.setItem("musicTrack", track);
+  audio.src = tracks[track];
+  audio.play().catch(()=>{});
+});
+
+setInterval(() => {
+  if (!audio.paused) {
+    localStorage.setItem("musicTime", audio.currentTime);
+  }
+}, 1000);
+</script>
+
+</body>
+</html>

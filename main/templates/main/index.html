@@ -1,0 +1,174 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+
+<div class="filters-panel">
+  <a href="/?type=gov" class="switch-btn {% if filter_type == 'gov' %}active{% endif %}">
+    🏛 Государственные
+  </a>
+
+  <a href="/?type=crime" class="switch-btn {% if filter_type == 'crime' %}active{% endif %}">
+    🚓 Криминальные
+  </a>
+
+  <button onclick="setFilter('best')">🔥 Лучшие</button>
+  <button onclick="setFilter('worst')">💀 Худшие</button>
+  <button onclick="setFilter('random')">🎲 Случайно</button>
+</div>
+
+
+<div class="login-success" id="loginSuccess"></div>
+
+<div class="grid-wrapper" id="grid">
+
+{% for c in page_obj %}
+<div class="logo-card"
+     data-id="{{ c.discord_id }}"
+     data-score="{{ c.score }}"
+     data-types="{{ c.curator_types|join:',' }}">
+
+  <div class="nickname"
+       data-discord="{{ c.discord_username|default:'' }}"
+       data-server="{{ c.server_nickname|default:'' }}">
+  </div>
+
+  <div class="activity-bar {{ c.progress_color }}" data-setting="activity">
+    <span style="width: {{ c.progress_percent }}%"></span>
+  </div>
+
+  <div class="activity-value" data-setting="score">
+    {{ c.score }} очков
+  </div>
+
+  <div class="stats">
+    <span data-setting="messages">💬 {{ c.messages }}</span>
+    <span data-setting="reactions">👍 {{ c.reactions }}</span>
+    <span data-setting="replies">📩 {{ c.replies }}</span>
+  </div>
+
+  <div class="voice" data-setting="voice">
+    🎧 {{ c.voice_hours }}h
+  </div>
+
+  {% if c.factions %}
+  <div class="factions" data-setting="factions">
+    {% for f in c.factions %}
+      <span class="faction-badge faction-{{ f|lower }}">{{ f }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+{% endfor %}
+
+<div class="pagination">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if filter_type %}&type={{ filter_type }}{% endif %}">
+      ←
+    </a>
+  {% endif %}
+
+  <span>
+    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+  </span>
+
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if filter_type %}&type={{ filter_type }}{% endif %}">
+      →
+    </a>
+  {% endif %}
+</div>
+
+
+</div>
+
+<script src="{% static 'main/js/settings.js' %}"></script>
+
+<script>
+const successText = "{{ request.session.login_success|default:'' }}";
+if (successText) {
+  const box = document.getElementById("loginSuccess");
+  box.innerText = successText;
+  box.classList.add("show");
+  setTimeout(() => box.classList.remove("show"), 3000);
+  fetch("/login/clear-success/");
+}
+</script>
+
+<!-- 🔴 SSE -->
+<script>
+const source = new EventSource("/api/curator/stream/");
+
+source.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  if (data.type !== "update") return;
+
+  const c = data.curator;
+  const card = document.querySelector(`[data-id="${c.discord_id}"]`);
+  if (!card) {
+    location.reload();
+    return;
+  }
+
+  card.dataset.score = c.score;
+  card.querySelector(".activity-value").innerText = `${c.score} очков`;
+  card.querySelector(".activity-bar span").style.width = c.progress_percent + "%";
+  card.querySelector(".activity-bar").className =
+    "activity-bar " + c.progress_color;
+
+  card.querySelector(".stats").innerHTML =
+    `💬 ${c.messages} 👍 ${c.reactions} 📩 ${c.replies}`;
+
+  card.querySelector(".voice").innerText =
+    `🎧 ${(c.voice_minutes / 60).toFixed(1)}h`;
+};
+</script>
+
+<!-- 🔀 sort -->
+<script>
+function setFilter(type) {
+  const grid = document.getElementById('grid');
+  const cards = Array.from(grid.querySelectorAll(".logo-card"));
+
+  if (type === 'random') {
+    cards.sort(() => Math.random() - 0.5);
+  } else {
+    cards.sort((a, b) => {
+      const sa = +a.dataset.score;
+      const sb = +b.dataset.score;
+      return type === 'best' ? sb - sa : sa - sb;
+    });
+  }
+
+  cards.forEach(c => grid.insertBefore(c, grid.querySelector(".pagination")));
+}
+</script>
+
+<script>
+function applyNicknameMode() {
+  const mode = localStorage.getItem("nickname_mode") || "discord";
+  const enabled = isEnabled("nickname");
+
+  document.querySelectorAll(".nickname").forEach(el => {
+    if (!enabled) {
+      el.style.display = "none";
+      return;
+    }
+
+    el.style.display = "";
+    const d = el.dataset.discord?.trim();
+    const s = el.dataset.server?.trim();
+    el.innerText = (mode === "server" && s) ? s : (d || "—");
+  });
+}
+
+document.addEventListener("DOMContentLoaded", applyNicknameMode);
+window.addEventListener("storage", applyNicknameMode);
+</script>
+
+<div id="toast-container"></div>
+
+{% endblock %}

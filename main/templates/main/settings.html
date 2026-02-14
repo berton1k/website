@@ -1,0 +1,114 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Настройки{% endblock %}
+
+{% block content %}
+<div class="settings-panel">
+  <h2>⚙️ Настройки отображения</h2>
+
+  <div class="settings-grid" id="settingsBox">
+
+    <div class="setting-item setting-wide">
+      <span class="setting-title">
+        <span class="icon server-icon"></span>
+        <span>Отображение ников</span>
+      </span>
+
+      <div class="custom-select" id="nicknameSelect">
+        <div class="select-head">
+          <span class="select-value">
+            <span class="icon discord-icon"></span>
+            <span class="value-text">Discord ник</span>
+          </span>
+          <span class="select-arrow">▾</span>
+        </div>
+
+        <div class="select-dropdown">
+          <div class="select-option" data-value="discord">
+            <span class="icon discord-icon"></span>
+            <span>Discord ник</span>
+          </div>
+
+          <div class="select-option" data-value="server">
+            <span class="icon server-icon"></span>
+            <span>Ник сервера</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="{% static 'main/js/settings.js' %}"></script>
+
+<script>
+
+const box = document.getElementById("settingsBox");
+
+SETTINGS.forEach(s => {
+  const checked = isEnabled(s.key);
+
+  box.insertAdjacentHTML("beforeend", `
+    <label class="setting-item">
+      <input type="checkbox" ${checked ? "checked" : ""}>
+      <span>${s.label}</span>
+    </label>
+  `);
+
+  const checkbox = box.lastElementChild.querySelector("input");
+  checkbox.onchange = () => {
+  setEnabled(s.key, checkbox.checked);
+
+  if (typeof applyNicknameMode === "function") {
+    applyNicknameMode();
+  }
+
+  window.dispatchEvent(new Event("storage"));
+};
+});
+</script>
+
+<script>
+const select = document.getElementById("nicknameSelect");
+const valueEl = select.querySelector(".select-value");
+const options = select.querySelectorAll(".select-option");
+
+const saved = localStorage.getItem("nickname_mode") || "discord";
+setSelectValue(saved);
+
+select.querySelector(".select-head").onclick = () => {
+  select.classList.toggle("open");
+};
+
+options.forEach(opt => {
+  opt.onclick = () => {
+    const value = opt.dataset.value;
+    localStorage.setItem("nickname_mode", value);
+    setSelectValue(value);
+    select.classList.remove("open");
+    window.dispatchEvent(new Event("storage"));
+  };
+});
+
+function setSelectValue(value) {
+  const icon = value === "server"
+    ? `<span class="icon server-icon"></span>`
+    : `<span class="icon discord-icon"></span>`;
+
+  const text = value === "server"
+    ? "Ник сервера"
+    : "Discord ник";
+
+  valueEl.innerHTML = icon + `<span class="value-text">${text}</span>`;
+}
+
+document.addEventListener("click", e => {
+  if (!select.contains(e.target)) {
+    select.classList.remove("open");
+  }
+});
+</script>
+
+{% endblock %}

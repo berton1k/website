@@ -1,0 +1,334 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Статистика{% endblock %}
+
+{% block content %}
+
+<div class="stats-scope">
+
+  <h2 class="stats-title">
+    📊 Статистика бота
+  </h2>
+
+  <div class="grid-wrapper stats-cards">
+
+    <div class="logo-card">
+      <div class="nickname">🌐 Серверов</div>
+      <div class="activity-value" id="stat-servers">0</div>
+    </div>
+
+    <div class="logo-card">
+      <div class="nickname">📁 Каналов</div>
+      <div class="activity-value" id="stat-channels">0</div>
+    </div>
+
+    <div class="logo-card">
+      <div class="nickname">🎭 Ролей</div>
+      <div class="activity-value" id="stat-roles">0</div>
+    </div>
+
+  </div>
+
+  <script src="{% static 'main/js/stats.js' %}" defer></script>
+
+  <h2 class="stats-title backups-title">
+    💾 Бэкапы серверов
+  </h2>
+
+  <div class="settings-panel stats-backups-panel">
+
+    <div class="setting-item setting-wide">
+      <span class="setting-title">
+        <span class="icon server-icon"></span>
+        <span>Сервер</span>
+      </span>
+
+      <div class="custom-select" id="backupServerSelect">
+        <div class="select-head">
+          <span class="select-value">
+            <span class="icon server-icon"></span>
+            <span class="value-text">Выберите сервер</span>
+          </span>
+          <span class="select-arrow">▾</span>
+        </div>
+
+        <div class="select-dropdown">
+        </div>
+      </div>
+    </div>
+
+    <div class="setting-item setting-wide">
+      <span class="setting-title">
+        <span class="icon"></span>
+        <span>Бэкап</span>
+      </span>
+
+      <div class="custom-select" id="backupSelect">
+        <div class="select-head">
+          <span class="select-value">
+            <span class="value-text">Выберите бэкап</span>
+          </span>
+          <span class="select-arrow">▾</span>
+        </div>
+
+        <div class="select-dropdown">
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-grid stats-actions">
+		
+      <button class="switch-btn active" onclick="createBackup()">
+        📦 Создать бэкап
+      </button>
+
+      <button class="switch-btn" onclick="restoreBackup()">
+        ♻ Загрузить бэкап
+      </button>
+
+    </div>
+
+  </div>
+	<script src="{% static 'main/js/toast.js' %}" defer></script>
+ 	<script src="{% static 'main/js/backups.js' %}" defer></script>
+</div>
+
+<style>
+    html, body {
+  overflow-x: hidden !important;
+}
+
+.stats-scope {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: block;
+}
+
+.stats-scope .stats-title {
+  text-align: center;
+  margin: 30px 0;
+}
+
+.stats-scope .backups-title {
+  margin-top: 120px;
+}
+
+.stats-scope .stats-cards {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 140px;
+  justify-items: center;
+}
+
+.stats-scope .logo-card {
+  transform: none !important;
+  padding: 14px 16px;
+  min-height: 100px;
+  margin-right: 270px;  
+}
+
+.stats-scope .stats-backups-panel {
+  max-width: 520px;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.stats-scope .setting-item {
+  position: relative;
+  margin-bottom: 18px;
+  z-index: 1;
+}
+
+.stats-scope .stats-actions {
+  grid-template-columns: 1fr 1fr;
+  margin-top: 22px;
+}
+
+.stats-scope .switch-btn {
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  transition: 0.25s;
+}
+
+.stats-scope .switch-btn.active {
+  background: linear-gradient(135deg, #40e0d0, #4f46e5);
+  color: #fff;
+}
+
+.stats-scope .custom-select {
+  position: relative;
+  z-index: 2;
+}
+
+.stats-scope .custom-select.open {
+  z-index: 1000;
+}
+
+.stats-scope .select-head {
+  background: rgba(0,0,0,0.55);
+  padding: 10px 12px;
+  border-radius: 14px;
+  transition: 0.25s;
+  cursor: none;
+}
+
+.stats-scope .select-head:hover {
+  background: rgba(64,224,208,0.2);
+}
+
+.stats-scope .select-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  z-index: 1001;
+  background: rgba(18,22,28,0.96);
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.stats-scope .custom-select.open .select-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.stats-scope .select-option {
+  padding: 10px 12px;
+  cursor: none;
+}
+
+.stats-scope .select-option:hover {
+  background: rgba(64,224,208,0.18);
+  color: #40e0d0;
+}
+
+.stats-scope .custom-select.open .select-arrow {
+  transform: rotate(180deg);
+  transition: .2s;
+}
+
+.stats-scope .select-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.stats-scope .select-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.stats-scope .select-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 6px;
+}
+
+.stats-scope .select-dropdown {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+
+@media (max-width: 768px) {
+  .stats-scope .stats-cards {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .stats-scope .stats-backups-panel {
+    margin-top: 80px;
+  }
+}
+.stats-scope .custom-select.open {
+  z-index: 10000;
+}
+
+.stats-scope .custom-select.open .select-dropdown {
+  pointer-events: auto;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.stats-scope .stats-backups-panel {
+  position: relative;
+}
+
+.stats-scope .setting-item {
+  position: relative;
+}
+
+.stats-scope .setting-item:nth-child(1) {
+  z-index: 10000;
+}
+
+.stats-scope .setting-item:nth-child(2) {
+  z-index: 1;
+}
+.stats-scope .switch-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-scope .switch-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255,255,255,0.25),
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  transition: transform .5s ease;
+}
+
+.stats-scope .switch-btn:hover::after {
+  transform: translateX(120%);
+}
+
+.stats-scope .switch-btn:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.stats-scope .switch-btn:active {
+  transform: scale(.97);
+}
+
+.toast {
+  position: fixed;
+  right: 24px;
+  background: rgba(20,20,20,0.95);
+  padding: 14px 18px;
+  border-radius: 14px;
+  color: #fff;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .25s ease, transform .25s ease;
+  z-index: 99999;
+  max-width: 360px;
+  white-space: normal;
+  word-break: break-word;  
+  max-height: 60px;  
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.success { border-left: 4px solid #40e0d0; }
+.toast.error   { border-left: 4px solid #ff4d4f; }
+.toast.warn    { border-left: 4px solid #facc15; }
+
+</style>
+
+{% endblock %}

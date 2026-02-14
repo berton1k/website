@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Вход</title>
+  <link rel="stylesheet" href="{% static 'main/css/main.css' %}">
+</head>
+<body class="login-page">
+
+<div class="login-error" id="loginError"></div>
+<div class="login-success" id="loginSuccess"></div>
+
+<div class="login-wrapper">
+  <div class="login-box" id="loginForm">
+    <h2>Вход</h2>
+
+    <a href="{% url 'discord_login' %}" class="discord-login-btn">
+  <img src="{% static 'main/img/discord-icon-svgrepo-com.svg' %}"
+       alt="Discord"
+       class="discord-icon">
+  <span>Войти через Discord</span>
+     <!-- <img src="{% static 'main/img/discord-icon-svgrepo-com.svg' %}" alt="Discord"> -->
+
+    </a>
+  </div>
+</div>
+
+<script>
+  const errorText = "{{ request.session.login_error|default:'' }}";
+  if (errorText) {
+    const box = document.getElementById("loginError");
+    box.innerText = errorText;
+    box.classList.add("show");
+
+    setTimeout(() => box.classList.remove("show"), 3500);
+
+    fetch("/login/clear-error/");
+  }
+</script>
+
+<div id="cursor"></div>
+<canvas id="particles"></canvas>
+
+<div id="custom-cursor"
+     style="background-image: url('{% static 'main/img/sha.png' %}')">
+</div>
+
+<canvas id="particle-canvas"></canvas>
+<canvas id="snow-canvas"></canvas>
+
+<script src="{% static 'main/js/main.js' %}"></script>
+</body>
+</html>

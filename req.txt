@@ -1,0 +1,12 @@
+a2s
+asgiref
+corsheaders
+django
+django-cors-headers
+pip
+sqlparse
+tzdata
+dotenv
+requests
+pyyaml ua-parser user-agents django-user-agents
+django-user-agents

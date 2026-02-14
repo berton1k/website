@@ -1,0 +1,20 @@
+{% extends "main/base.html" %}
+{% block title %}Просмотренные{% endblock %}
+
+{% block content %}
+<h2 style="color:white;margin-bottom:20px;">Просмотренные</h2>
+
+<div class="posts">
+  {% for p in page_obj %}
+    <div class="post">
+      <strong>{{ p.author }}</strong>
+      <span style="opacity:.6;font-size:12px;">
+        {{ p.created_at|date:"d.m.Y H:i" }}
+      </span>
+      <p>{{ p.text }}</p>
+    </div>
+  {% endfor %}
+</div>
+
+{% include "main/pagination.html" %}
+{% endblock %}

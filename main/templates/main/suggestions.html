@@ -1,0 +1,44 @@
+{% extends "main/base.html" %}
+{% block title %}Предложения{% endblock %}
+
+{% block content %}
+<h2 style="color:white;margin-bottom:20px;">Предложения</h2>
+
+<div class="posts">
+  {% for p in page_obj %}
+    <div class="post">
+
+    <div class="post-header">
+      <span class="post-label">Предложение</span>
+      <span class="post-meta">
+        👤 {{ p.author }} · 🕒 {{ p.created_at|date:"d.m.Y H:i" }}
+      </span>
+    </div>
+
+    <div class="post-text">
+      {{ p.text }}
+    </div>
+
+    <div class="actions">
+      <a href="{% url 'move_post' p.pk %}">Переместить</a>
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+
+<div class="suggestion-form">
+  <form method="post">
+    {% csrf_token %}
+    <textarea
+ 	  name="text"
+	  placeholder="Введите ваше предложение...&#10;(Пример: Шинигами хорошо выполняет свою работу, можно ставиться к нему лояльнее)"
+	  required
+	></textarea>
+
+    <button type="submit">➕ Добавить предложение</button>
+  </form>
+</div>
+
+{% include "main/pagination.html" %}
+{% endblock %}

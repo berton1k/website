@@ -1,0 +1,59 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+
+<div class="curator-filters">
+  <button class="active" data-filter="best">Лучшие</button>
+  <button data-filter="worst">Худшие</button>
+  <button data-filter="random">Случайно</button>
+</div>
+
+
+<div class="filters">
+  <button onclick="setFilter('best')">Лучшие</button>
+  <button onclick="setFilter('worst')">Худшие</button>
+  <button onclick="setFilter('random')">Случайно</button>
+</div>
+
+<div class="grid-wrapper" id="grid">
+
+  <div class="logo-card" data-score="92">
+    <div class="nickname">shinigami</div>
+    <div class="activity-bar"><span style="width:92%"></span></div>
+    <div class="activity-value">92</div>
+    <div class="stats">💬 31 👍 54 📩 112</div>
+    <div class="voice">🎧 0.3h</div>
+  </div>
+
+  <div class="logo-card" data-score="61">
+    <div class="nickname">haruki</div>
+    <div class="activity-bar"><span style="width:61%"></span></div>
+    <div class="activity-value">61</div>
+    <div class="stats">💬 18 👍 22 📩 40</div>
+    <div class="voice">🎧 0.1h</div>
+  </div>
+
+</div>
+
+<div class="pagination">
+  <button>&larr;</button>
+  <span>Страница 1 из 3</span>
+  <button>&rarr;</button>
+</div>
+
+
+<script>
+document.querySelectorAll('.curator-filters button').forEach(btn => {
+  btn.onclick = () => {
+    document
+      .querySelectorAll('.curator-filters button')
+      .forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  };
+});
+</script>
+
+
+{% endblock %}

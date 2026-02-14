@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Сонячна квітка{% endblock %}</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'main/css/main.css' %}">
+</head>
+<body>
+
+<div class="christmas-banner">
+  <svg id="christmasSvg" viewBox="0 0 1200 180" width="100%" height="120"></svg>
+</div>
+
+<script src="{% static 'main/js/smoke.js' %}"></script>
+
+<div class="menu-hover-zone"></div>
+
+<!-- menu -->
+<nav class="side-menu">
+  <div class="side-toggle" aria-hidden="true"><span class="arrow"></span></div>
+	
+  <a href="{% url 'index' %}" class="menu-item">Главная</a>
+  <a href="{% url 'settings' %}" class="menu-item">Настройки</a>
+  <a href="{% url 'suggestions' %}" class="menu-item">Предложения</a>
+  <a href="{% url 'viewed' %}" class="menu-item">Просмотрено</a>
+  {% if is_admin_panel %}
+  <a href="{% url 'stats' %}" class="menu-item">Статистика</a>
+  <a href="{% url 'clear' %}" class="menu-item">Очистка</a>
+  {% endif %}
+  <a href="{% url 'logout' %}" class="menu-item">Выход</a>
+
+  <div class="profile-panel">
+    <div class="avatar-wrapper">
+      {% if discord_user %}
+        <img class="avatar"
+             src="https://cdn.discordapp.com/avatars/{{ discord_user.id }}/{{ discord_user.avatar }}.{% if discord_user.avatar|slice:":2" == "a_" %}gif{% else %}png{% endif %}">
+      {% else %}
+        <img src="{% static 'main/img/default_avatar.png' %}" class="avatar">
+      {% endif %}
+      <img src="https://cdn.discordapp.com/avatar-decoration-presets/a_8384f035d67eb209be18aaadf191f25e.png"
+           class="avatar-frame">
+      <span class="online-dot online"></span>
+    </div>
+
+    <div class="profile-name">
+      {% if discord_user %}{{ discord_user.username }}{% else %}Guest{% endif %}
+    </div>
+
+    <div class="profile-socials">
+      <a href="https://discord.com/users/whale.fun" target="_blank">
+        <img src="{% static 'main/img/discord-icon-svgrepo-com.svg' %}">
+      </a>
+      <a href="https://steamcommunity.com/id/tobRcsgo" target="_blank">
+        <img src="{% static 'main/img/steam-svgrepo-com.svg' %}">
+      </a>
+    </div>
+  </div>
+</nav>
+
+<main class="content">
+  {% block content %}{% endblock %}
+</main>
+
+<div id="cursor"></div>
+<canvas id="particles"></canvas>
+<div id="custom-cursor" style="background-image:url('{% static 'main/img/sha.png' %}')"></div>
+<canvas id="particle-canvas"></canvas>
+<canvas id="snow-canvas"></canvas>
+
+<script src="{% static 'main/js/main.js' %}"></script>
+
+<!-- 🎄 CHRISTMAS TEXT ANIMATION -->
+<script>
+const svg = document.getElementById("christmasSvg");
+const text = "🎄 Merry Christmas 🎄";
+const chars = [...text];
+
+const width = 1200;
+const spacing = 42;
+const topY = 70;
+const amplitude = 20;
+const speed = 0.9;
+
+let baseX = parseFloat(localStorage.getItem("xmas_baseX"));
+let t = parseFloat(localStorage.getItem("xmas_time"));
+if (isNaN(baseX)) baseX = width + 100;
+if (isNaN(t)) t = 0;
+
+const endX = -chars.length * spacing;
+const letters = [];
+
+chars.forEach((char, i) => {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  el.textContent = char;
+  el.classList.add("christmas-letter");
+  svg.appendChild(el);
+
+  letters.push({
+    el,
+    offset: i * spacing,
+    phase: Math.random() * Math.PI * 2,
+    float: 4 + Math.random() * 6,
+    glow: Math.random() * 10
+  });
+});
+
+function animateText() {
+  t += 0.016;
+  baseX -= speed;
+
+  if (baseX < endX) baseX = width + 100;
+
+  letters.forEach(l => {
+    const x = baseX + l.offset;
+    const wave = Math.sin((x / width) * Math.PI) * amplitude;
+    const float = Math.sin(t + l.phase) * l.float;
+    l.glow += 0.04;
+    const g = Math.abs(Math.sin(l.glow));
+
+    l.el.setAttribute(
+      "transform",
+      `translate(${x}, ${topY + wave + float})`
+    );
+
+    l.el.style.filter = `
+      drop-shadow(0 0 ${6 + g * 10}px rgba(0,180,255,0.85))
+      drop-shadow(0 0 ${8 + g * 14}px rgba(255,60,60,0.75))
+    `;
+    l.el.style.opacity = 0.75 + g * 0.25;
+  });
+
+  requestAnimationFrame(animateText);
+}
+
+animateText();
+
+setInterval(() => {
+  localStorage.setItem("xmas_baseX", baseX);
+  localStorage.setItem("xmas_time", t);
+}, 500);
+</script>
+<script>
+const btn = document.getElementById("musicBtn");
+const frame = document.getElementById("musicFrame");
+
+let unlocked = false;
+let playing = localStorage.getItem("musicPlaying");
+if (playing === null) playing = "true";
+
+btn.textContent = playing === "true" ? "⏸ Music" : "▶ Music";
+
+btn.addEventListener("click", () => {
+
+  if (!unlocked) {
+    frame.contentWindow.focus();
+    unlocked = true;
+  }
+
+  playing = playing === "true" ? "false" : "true";
+  localStorage.setItem("musicPlaying", playing);
+
+  frame.contentWindow.postMessage(
+    { type: playing === "true" ? "PLAY" : "PAUSE" },
+    "*"
+  );
+
+  btn.textContent = playing === "true" ? "⏸ Music" : "▶ Music";
+});
+</script>
+
+<div id="toast-container"></div>
+</body>
+</html>
